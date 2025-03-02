@@ -1,35 +1,61 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState, useEffect } from "react";
+import { fetchRandomDestination } from "./services/api";
+import Confetti from "react-confetti";
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
+  const [destination, setDestination] = useState(null);
+  const [answer, setAnswer] = useState("");
+  const [feedback, setFeedback] = useState(null);
+
+  useEffect(() => {
+    loadDestination();
+  }, []);
+
+  const loadDestination = async () => {
+    const data = await fetchRandomDestination();
+    setDestination(data);
+    setFeedback(null);
+  };
+
+  const handleSubmit = () => {
+    if (answer.toLowerCase() === destination.city.toLowerCase()) {
+      setFeedback({ correct: true, funFact: destination.fun_fact[0] });
+    } else {
+      setFeedback({ correct: false, funFact: destination.fun_fact[1] });
+    }
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div className="game-container">
+      {feedback?.correct && <Confetti />}
+      <h2>Guess the Destination!</h2>
+      {destination && (
+        <>
+          <p>
+            {
+              destination.clues[
+                Math.floor(Math.random() * destination.clues.length)
+              ]
+            }
+          </p>
+          <input
+            type="text"
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            placeholder="Your answer..."
+          />
+          <button onClick={handleSubmit}>Submit</button>
+          {feedback && (
+            <div>
+              <p>{feedback.correct ? "🎉 Correct!" : "😢 Incorrect!"}</p>
+              <p>Fun Fact: {feedback.funFact}</p>
+              <button onClick={loadDestination}>Next</button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
 
-export default App
+export default App;
